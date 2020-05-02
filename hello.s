@@ -65,11 +65,10 @@ init_screen:
 	ldy #$00		; Load 0 to Y index register
 screen_loop:
 	sta SCREEN_RAM+0,x	; Store to SCREEN_RAM[x]
-	sta SCREEN_RAM+250,x	; Store to SCREEN_RAM+250[x]
-	sta SCREEN_RAM+500,x	; Store to SCREEN_RAM+500[x]
-	sta SCREEN_RAM+750,x	; Store to SCREEN_RAM+750[x]
+	sta SCREEN_RAM+$100,x	; Store to SCREEN_RAM+256[x]
+	sta SCREEN_RAM+$200,x	; Store to SCREEN_RAM+512[x]
+	sta SCREEN_RAM+$2e8,x	; Store to SCREEN_RAM+744[x]
 	inx			; Increment X index register
-	cpx #$fa		; Compare against 250
 	bne screen_loop		; Loop if we're not done
 
 	sty VIC_BORDER_COLOR	; Screen border black
@@ -77,7 +76,6 @@ screen_loop:
 	rts			; Return from subroutine
 
 init_text:
-	ldy #$01		; load accumulator with 1
 	ldx #$00		; load X index with 0
 text_loop:
 	lda message,x		; load A with message[x]
