@@ -83,6 +83,8 @@ init_text:
 text_loop:
 	lda message,x		; load A with message[x]
 	sta $05e0,x		; Store to middle line of screen
+	lda message+40,x	; load A with message[x]
+	sta $05e0+40,x		; Store to middle line of screen
 	inx			; increment X
 	cpx #40			; X == 40?
 	bne text_loop		; If not, we're not done
@@ -104,6 +106,7 @@ color_wash:
 	pha			; Push a copy to the stack
 color_loop:
 	sta $d9e0,x		; Store to center line of color ram
+	sta $d9e0+40,x		; Store to center line of color ram
 	lda color+1,x		; Get next color
 	sta color,x		; Overwrite current color
 	inx			; Increment X index
@@ -114,7 +117,8 @@ color_loop:
 	rts
 
 message:	
-	!scr "              hello world!              "
+	!scr "            happy birthday!             "
+	!scr "                 xxxxx                  "
 
 color:
         !byte $09,$09,$09,$09,$01
