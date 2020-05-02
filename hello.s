@@ -91,7 +91,6 @@ irq:
 	jmp $ea81		; Jump to system IRQ handler
 
 color_wash:	
-	inc $d020
 	ldx #$00		; Load X with 0
 	lda color,x		; Put first color in X
 	pha			; Push a copy to the stack
@@ -104,7 +103,6 @@ color_loop:
 	bne color_loop		; If not, we're not done
 	pla			; Pull stored copy of first color from Stack
 	sta color,x		; Overwrite last color
-	dec $d020
 	rts
 
 message:	
