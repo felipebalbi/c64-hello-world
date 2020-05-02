@@ -12,6 +12,8 @@
 	CIA2_INTR_REG = $dd0d
 	IRQ_LOW = $0314
 	IRQ_HIGH = $0315
+	sid_init = $1000
+	sid_play = $1003
 
 	;; Start of basic loader
 	*= $0801
@@ -34,6 +36,7 @@ main:
 
 	jsr init_screen		; Initialize the screen
 	jsr init_text		; Write our text to the screen
+        jsr sid_init		; Initialize music routine
 	
         ldy #$7f		; $7f = %01111111
         sty CIA1_INTR_REG	; clear all CIA1 interrupts
@@ -88,7 +91,12 @@ text_loop:
 irq:
 	dec $d019		; Clear the Interrupt Status
 	jsr color_wash		; Call our color wash subroutine
+	jsr play_music		; Play tune
 	jmp $ea81		; Jump to system IRQ handler
+
+play_music:
+	jsr sid_play
+	rts
 
 color_wash:	
 	ldx #$00		; Load X with 0
@@ -117,3 +125,6 @@ color:
         !byte $01,$01,$01,$01,$01
         !byte $01,$01,$01,$01,$01
         !byte $01,$01,$01,$01,$01
+
+	* = $1000
+	!bin "happy_birthday.sid",,$7c+2
