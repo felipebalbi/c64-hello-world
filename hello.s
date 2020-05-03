@@ -20,7 +20,7 @@
 	CIA2_INTR_REG = $dd0d
 	IRQ_LOW = $0314
 	IRQ_HIGH = $0315
-	sid_init = $1000
+	init_sid = $1000
 	sid_play = $1003
 
 	;; Start of basic loader
@@ -44,8 +44,8 @@ main:
 
 	jsr init_screen		; Initialize the screen
 	jsr init_text		; Write our text to the screen
+        jsr init_sid		; Initialize music routine
 	jsr init_sprites	; Initialize our sprites
-        jsr sid_init		; Initialize music routine
 	
         ldy #$7f		; $7f = %01111111
         sty CIA1_INTR_REG	; clear all CIA1 interrupts
@@ -86,14 +86,15 @@ init_sprites:
 
 	lda #$01		; Sprites 0, 1, 2 are multicolor
 	sta VIC_SPRITE_MULTICOLOR
+	sta VIC_SPRITE_ENABLE
 
-	;; lda #100
-	;; sta VIC_SPRITE_X_POS+0
-	;; sta VIC_SPRITE_Y_POS+0
-	;; sta VIC_SPRITE_X_POS+2
-	;; sta VIC_SPRITE_Y_POS+2
-	;; sta VIC_SPRITE_X_POS+4
-	;; sta VIC_SPRITE_Y_POS+4
+	lda #100
+	sta VIC_SPRITE_X_POS+0
+	sta VIC_SPRITE_Y_POS+0
+	sta VIC_SPRITE_X_POS+2
+	sta VIC_SPRITE_Y_POS+2
+	sta VIC_SPRITE_X_POS+4
+	sta VIC_SPRITE_Y_POS+4
 
 	rts
 
@@ -129,7 +130,18 @@ irq:
 	dec $d019		; Clear the Interrupt Status
 	jsr color_wash		; Call our color wash subroutine
 	jsr play_music		; Play tune
+	jsr animate_sprite	; Animate our baloon by multiplexing the 3 sprites
 	jmp $ea81		; Jump to system IRQ handler
+
+animate_sprite:
+	ldx animation_counter
+	dex
+	bne animation_done
+	inc VIC_SPRITE_ENABLE
+	
+animation_done:
+	rts
+	
 
 play_music:
 	jsr sid_play
@@ -165,10 +177,13 @@ color:
         !byte $01,$01,$01,$01,$01
         !byte $01,$01,$01,$01,$01
 
+animation_counter:
+	!byte $0a
+
 	* = $1000
 	!bin "happy-birthday.sid",,$7c+2
 
-	* = $3000
+	* = $2000
 baloon:
 	!byte $00,$00,$00,$00,$14,$00,$00,$55
 	!byte $00,$01,$59,$40,$01,$56,$40,$01
