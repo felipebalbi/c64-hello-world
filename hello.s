@@ -3,12 +3,19 @@
 
 	;; Helper labels
 	SCREEN_RAM = $0400
+	SPRITE_POINTER = $07f8
 	COLOR_RAM = $d800
+	VIC_SPRITE_X_POS = $d000
+	VIC_SPRITE_Y_POS = $d001
 	VIC_SCREEN_CTRL_REG = $d011
 	VIC_RASTER_LINE = $d012
+	VIC_SPRITE_ENABLE = $d015
 	VIC_INTR_REG = $d01a
+	VIC_SPRITE_MULTICOLOR = $d01c
 	VIC_BORDER_COLOR = $d020
 	VIC_SCREEN_COLOR = $d021
+	VIC_SPRITE_EXTRA_COLOR1 = $d025
+	VIC_SPRITE_EXTRA_COLOR2 = $d026
 	CIA1_INTR_REG = $dc0d
 	CIA2_INTR_REG = $dd0d
 	IRQ_LOW = $0314
@@ -37,6 +44,7 @@ main:
 
 	jsr init_screen		; Initialize the screen
 	jsr init_text		; Write our text to the screen
+	jsr init_sprites	; Initialize our sprites
         jsr sid_init		; Initialize music routine
 	
         ldy #$7f		; $7f = %01111111
@@ -62,6 +70,35 @@ main:
 	
 	cli			; Reenable interrupts
 	jmp *			; loop forever
+
+init_sprites:
+	lda #$05
+	sta VIC_SPRITE_EXTRA_COLOR1
+	lda #$06
+	sta VIC_SPRITE_EXTRA_COLOR2
+
+	lda #baloon/64		; Address of sprite 0
+	sta SCREEN_RAM + $03f8 + 0
+	lda #baloon2/64		; Address of sprite 1
+	sta SCREEN_RAM + $03f8 + 1
+	lda #baloon3/64		; Address of sprite 2
+	sta SCREEN_RAM + $03f8 + 2
+
+	lda #$07		; Sprites 0, 1, 2 are multicolor
+	sta VIC_SPRITE_MULTICOLOR
+
+	lda #$01		; Enable sprites 0
+	sta VIC_SPRITE_ENABLE
+
+	lda #100
+	sta VIC_SPRITE_X_POS+0
+	sta VIC_SPRITE_Y_POS+0
+	sta VIC_SPRITE_X_POS+2
+	sta VIC_SPRITE_Y_POS+2
+	sta VIC_SPRITE_X_POS+4
+	sta VIC_SPRITE_Y_POS+4
+
+	rts
 
 init_screen:
 	lda #$20		; Load space into accumulator
@@ -122,8 +159,8 @@ message:
 	!scr "                 xxxxx                  "
 
 color:
-        !byte $09,$09,$09,$09,$01
-        !byte $01,$01,$01,$01,$01
+        !byte $03,$0e,$06,$06,$0e
+        !byte $03,$01,$01,$01,$01
         !byte $01,$01,$01,$01,$01
         !byte $01,$01,$01,$01,$01
         !byte $01,$01,$01,$01,$01
@@ -132,4 +169,36 @@ color:
         !byte $01,$01,$01,$01,$01
 
 	* = $1000
-	!bin "happy_birthday.sid",,$7c+2
+	!bin "happy-birthday.sid",,$7c+2
+
+	* = $2000
+baloon:
+	!byte $00,$00,$00,$00,$14,$00,$00,$55
+	!byte $00,$01,$59,$40,$01,$56,$40,$01
+	!byte $56,$40,$01,$55,$40,$01,$55,$40
+	!byte $00,$55,$00,$00,$55,$00,$00,$14
+	!byte $00,$00,$14,$00,$00,$0c,$00,$00
+	!byte $0c,$00,$00,$0c,$00,$00,$30,$00
+	!byte $00,$30,$00,$00,$c0,$00,$03,$00
+	!byte $00,$00,$00,$00,$00,$00,$00,$81
+
+baloon2:
+	!byte $00,$00,$00,$00,$14,$00,$00,$55
+	!byte $00,$01,$59,$40,$01,$56,$40,$01
+	!byte $56,$40,$01,$55,$40,$01,$55,$40
+	!byte $00,$55,$00,$00,$55,$00,$00,$14
+	!byte $00,$00,$14,$00,$00,$0c,$00,$00
+	!byte $0c,$00,$00,$0c,$00,$00,$0c,$00
+	!byte $00,$30,$00,$00,$30,$00,$00,$30
+	!byte $00,$00,$00,$00,$00,$00,$00,$81
+
+baloon3:
+	!byte $00,$00,$00,$00,$14,$00,$00,$55
+	!byte $00,$01,$59,$40,$01,$56,$40,$01
+	!byte $56,$40,$01,$55,$40,$01,$55,$40
+	!byte $00,$55,$00,$00,$55,$00,$00,$14
+	!byte $00,$00,$14,$00,$00,$0c,$00,$00
+	!byte $0c,$00,$00,$0c,$00,$00,$03,$00
+	!byte $00,$03,$00,$00,$00,$c0,$00,$00
+	!byte $30,$00,$00,$00,$00,$00,$00,$81
+	
