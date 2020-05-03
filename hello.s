@@ -84,19 +84,16 @@ init_sprites:
 	lda #baloon3/64		; Address of sprite 2
 	sta SCREEN_RAM + $03f8 + 2
 
-	lda #$07		; Sprites 0, 1, 2 are multicolor
+	lda #$01		; Sprites 0, 1, 2 are multicolor
 	sta VIC_SPRITE_MULTICOLOR
 
-	lda #$01		; Enable sprites 0
-	sta VIC_SPRITE_ENABLE
-
-	lda #100
-	sta VIC_SPRITE_X_POS+0
-	sta VIC_SPRITE_Y_POS+0
-	sta VIC_SPRITE_X_POS+2
-	sta VIC_SPRITE_Y_POS+2
-	sta VIC_SPRITE_X_POS+4
-	sta VIC_SPRITE_Y_POS+4
+	;; lda #100
+	;; sta VIC_SPRITE_X_POS+0
+	;; sta VIC_SPRITE_Y_POS+0
+	;; sta VIC_SPRITE_X_POS+2
+	;; sta VIC_SPRITE_Y_POS+2
+	;; sta VIC_SPRITE_X_POS+4
+	;; sta VIC_SPRITE_Y_POS+4
 
 	rts
 
@@ -171,7 +168,7 @@ color:
 	* = $1000
 	!bin "happy-birthday.sid",,$7c+2
 
-	* = $2000
+	* = $3000
 baloon:
 	!byte $00,$00,$00,$00,$14,$00,$00,$55
 	!byte $00,$01,$59,$40,$01,$56,$40,$01
