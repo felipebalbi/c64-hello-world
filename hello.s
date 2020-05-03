@@ -16,6 +16,7 @@
 	VIC_SCREEN_COLOR = $d021
 	VIC_SPRITE_EXTRA_COLOR1 = $d025
 	VIC_SPRITE_EXTRA_COLOR2 = $d026
+	VIC_SPRITE_COLOR = $d027
 	CIA1_INTR_REG = $dc0d
 	CIA2_INTR_REG = $dd0d
 	IRQ_LOW = $0314
@@ -72,6 +73,9 @@ main:
 	jmp *			; loop forever
 
 init_sprites:
+	lda #$01
+	sta VIC_SPRITE_COLOR
+	sta VIC_SPRITE_COLOR + 1
 	lda #$05
 	sta VIC_SPRITE_EXTRA_COLOR1
 	lda #$06
@@ -79,14 +83,18 @@ init_sprites:
 
 	lda animation_frame	; Address of sprite 0
 	sta SCREEN_RAM + $03f8 + 0
+	sta SCREEN_RAM + $03f8 + 1
 
-	lda #$01		; Sprites 0, 1, 2 are multicolor
+	lda #$03		; Sprites 0, 1 are multicolor
 	sta VIC_SPRITE_MULTICOLOR
 	sta VIC_SPRITE_ENABLE
 
 	lda #100
 	sta VIC_SPRITE_X_POS+0
 	sta VIC_SPRITE_Y_POS+0
+	sta VIC_SPRITE_Y_POS+2
+	lda #237
+	sta VIC_SPRITE_X_POS+2
 
 	rts
 
@@ -136,6 +144,7 @@ animate_sprite:
 	eor #$01
 	sta animation_frame
 	sta SCREEN_RAM + $03f8
+	sta SCREEN_RAM + $03f8 + 1
 animation_done:	
 	rts
 
