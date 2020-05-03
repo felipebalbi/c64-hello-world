@@ -73,9 +73,22 @@ main:
 	jmp *			; loop forever
 
 init_sprites:
-	lda #$01
-	sta VIC_SPRITE_COLOR
-	sta VIC_SPRITE_COLOR + 1
+	ldx #$00
+	stx VIC_SPRITE_COLOR + 0
+	inx
+	stx VIC_SPRITE_COLOR + 1
+	inx
+	stx VIC_SPRITE_COLOR + 2
+	inx
+	stx VIC_SPRITE_COLOR + 3
+	inx
+	stx VIC_SPRITE_COLOR + 4
+	inx
+	stx VIC_SPRITE_COLOR + 5
+	inx
+	stx VIC_SPRITE_COLOR + 6
+	inx
+	stx VIC_SPRITE_COLOR + 7
 	lda #$05
 	sta VIC_SPRITE_EXTRA_COLOR1
 	lda #$06
@@ -84,18 +97,29 @@ init_sprites:
 	lda animation_frame	; Address of sprite 0
 	sta SCREEN_RAM + $03f8 + 0
 	sta SCREEN_RAM + $03f8 + 1
+	sta SCREEN_RAM + $03f8 + 2
+	sta SCREEN_RAM + $03f8 + 3
+	sta SCREEN_RAM + $03f8 + 4
+	sta SCREEN_RAM + $03f8 + 5
+	sta SCREEN_RAM + $03f8 + 6
+	sta SCREEN_RAM + $03f8 + 7
 
-	lda #$03		; Sprites 0, 1 are multicolor
-	sta VIC_SPRITE_MULTICOLOR
-	sta VIC_SPRITE_ENABLE
+	lda #$ff
+	sta VIC_SPRITE_MULTICOLOR; all sprites are multicolor
+	sta VIC_SPRITE_ENABLE	 ; all sprites are enabled
 
-	lda #100
-	sta VIC_SPRITE_X_POS+0
-	sta VIC_SPRITE_Y_POS+0
-	sta VIC_SPRITE_Y_POS+2
-	lda #237
-	sta VIC_SPRITE_X_POS+2
-
+	;; Set all sprite positions. Last one is special.
+	ldx #$00
+sprite_location_loop:
+	lda sprite_locations,x
+	beq init_sprites_done
+	sta VIC_SPRITE_X_POS,x
+	sta VIC_SPRITE_Y_POS,x
+	inx
+	jmp sprite_location_loop
+init_sprites_done:
+	lda #$80
+	sta $d010
 	rts
 
 init_screen:
@@ -143,8 +167,14 @@ animate_sprite:
 	lda animation_frame
 	eor #$01
 	sta animation_frame
-	sta SCREEN_RAM + $03f8
+	sta SCREEN_RAM + $03f8 + 0
 	sta SCREEN_RAM + $03f8 + 1
+	sta SCREEN_RAM + $03f8 + 2
+	sta SCREEN_RAM + $03f8 + 3
+	sta SCREEN_RAM + $03f8 + 4
+	sta SCREEN_RAM + $03f8 + 5
+	sta SCREEN_RAM + $03f8 + 6
+	sta SCREEN_RAM + $03f8 + 7
 animation_done:	
 	rts
 
@@ -209,3 +239,8 @@ animation_counter:
 
 animation_frame:
 	!byte balloon / 64
+
+sprite_locations:
+	!byte $dc,$64,$85,$9a,$65,$69,$7c,$34
+	!byte $b6,$2c,$db,$59,$c8,$91,$23,$97
+	!byte $00		; terminator
