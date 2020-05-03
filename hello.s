@@ -3,6 +3,7 @@
 
 	;; Helper labels
 	SCREEN_RAM = $0400
+	COLOR_RAM = $d800
 	VIC_SCREEN_CTRL_REG = $d011
 	VIC_RASTER_LINE = $d012
 	VIC_INTR_REG = $d01a
@@ -82,9 +83,9 @@ init_text:
 	ldx #$00		; load X index with 0
 text_loop:
 	lda message,x		; load A with message[x]
-	sta $05e0,x		; Store to middle line of screen
+	sta SCREEN_RAM+12*40,x	; Store to middle line of screen
 	lda message+40,x	; load A with message[x]
-	sta $05e0+40,x		; Store to middle line of screen
+	sta SCREEN_RAM+13*40,x	; Store to middle line of screen
 	inx			; increment X
 	cpx #40			; X == 40?
 	bne text_loop		; If not, we're not done
@@ -105,8 +106,8 @@ color_wash:
 	lda color,x		; Put first color in X
 	pha			; Push a copy to the stack
 color_loop:
-	sta $d9e0,x		; Store to center line of color ram
-	sta $d9e0+40,x		; Store to center line of color ram
+	sta COLOR_RAM+12*40,x	; Store to center line of color ram
+	sta COLOR_RAM+13*40,x	; Store to center line of color ram
 	lda color+1,x		; Get next color
 	sta color,x		; Overwrite current color
 	inx			; Increment X index
