@@ -77,12 +77,8 @@ init_sprites:
 	lda #$06
 	sta VIC_SPRITE_EXTRA_COLOR2
 
-	lda #baloon/64		; Address of sprite 0
+	lda animation_frame	; Address of sprite 0
 	sta SCREEN_RAM + $03f8 + 0
-	lda #baloon2/64		; Address of sprite 1
-	sta SCREEN_RAM + $03f8 + 1
-	lda #baloon3/64		; Address of sprite 2
-	sta SCREEN_RAM + $03f8 + 2
 
 	lda #$01		; Sprites 0, 1, 2 are multicolor
 	sta VIC_SPRITE_MULTICOLOR
@@ -130,18 +126,22 @@ irq:
 	dec $d019		; Clear the Interrupt Status
 	jsr color_wash		; Call our color wash subroutine
 	jsr play_music		; Play tune
-	jsr animate_sprite	; Animate our baloon by multiplexing the 3 sprites
+	jsr animate_sprite	; Animate our balloon by multiplexing the 3 sprites
 	jmp $ea81		; Jump to system IRQ handler
 
 animate_sprite:
-	ldx animation_counter
-	dex
+	inc animation_counter
+	lda animation_counter
+	cmp #15
 	bne animation_done
-	inc VIC_SPRITE_ENABLE
-	
-animation_done:
+	lda #0
+	sta animation_counter
+	lda animation_frame
+	eor #$02
+	sta animation_frame
+	sta SCREEN_RAM + $03f8
+animation_done:	
 	rts
-	
 
 play_music:
 	jsr sid_play
@@ -177,14 +177,11 @@ color:
         !byte $01,$01,$01,$01,$01
         !byte $01,$01,$01,$01,$01
 
-animation_counter:
-	!byte $0a
-
 	* = $1000
 	!bin "happy-birthday.sid",,$7c+2
 
 	* = $2000
-baloon:
+balloon:
 	!byte $00,$00,$00,$00,$14,$00,$00,$55
 	!byte $00,$01,$59,$40,$01,$56,$40,$01
 	!byte $56,$40,$01,$55,$40,$01,$55,$40
@@ -194,7 +191,7 @@ baloon:
 	!byte $00,$30,$00,$00,$c0,$00,$03,$00
 	!byte $00,$00,$00,$00,$00,$00,$00,$81
 
-baloon2:
+balloon2:
 	!byte $00,$00,$00,$00,$14,$00,$00,$55
 	!byte $00,$01,$59,$40,$01,$56,$40,$01
 	!byte $56,$40,$01,$55,$40,$01,$55,$40
@@ -204,7 +201,7 @@ baloon2:
 	!byte $00,$30,$00,$00,$30,$00,$00,$30
 	!byte $00,$00,$00,$00,$00,$00,$00,$81
 
-baloon3:
+balloon3:
 	!byte $00,$00,$00,$00,$14,$00,$00,$55
 	!byte $00,$01,$59,$40,$01,$56,$40,$01
 	!byte $56,$40,$01,$55,$40,$01,$55,$40
@@ -214,3 +211,8 @@ baloon3:
 	!byte $00,$03,$00,$00,$00,$c0,$00,$00
 	!byte $30,$00,$00,$00,$00,$00,$00,$81
 	
+animation_counter:
+	!byte $00
+
+animation_frame:
+	!byte balloon / 64
