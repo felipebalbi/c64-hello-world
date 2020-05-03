@@ -73,7 +73,7 @@ main:
 	jmp *			; loop forever
 
 init_sprites:
-	ldx #$00
+	ldx #$01
 	stx VIC_SPRITE_COLOR + 0
 	stx VIC_SPRITE_COLOR + 1
 	stx VIC_SPRITE_COLOR + 2
