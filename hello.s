@@ -87,10 +87,6 @@ init_sprites:
 	lda #100
 	sta VIC_SPRITE_X_POS+0
 	sta VIC_SPRITE_Y_POS+0
-	sta VIC_SPRITE_X_POS+2
-	sta VIC_SPRITE_Y_POS+2
-	sta VIC_SPRITE_X_POS+4
-	sta VIC_SPRITE_Y_POS+4
 
 	rts
 
@@ -132,7 +128,7 @@ irq:
 animate_sprite:
 	inc animation_counter
 	lda animation_counter
-	cmp #15
+	cmp #20
 	bne animation_done
 	lda #0
 	sta animation_counter
