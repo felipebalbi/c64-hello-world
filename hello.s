@@ -75,19 +75,12 @@ main:
 init_sprites:
 	ldx #$00
 	stx VIC_SPRITE_COLOR + 0
-	inx
 	stx VIC_SPRITE_COLOR + 1
-	inx
 	stx VIC_SPRITE_COLOR + 2
-	inx
 	stx VIC_SPRITE_COLOR + 3
-	inx
 	stx VIC_SPRITE_COLOR + 4
-	inx
 	stx VIC_SPRITE_COLOR + 5
-	inx
 	stx VIC_SPRITE_COLOR + 6
-	inx
 	stx VIC_SPRITE_COLOR + 7
 	lda #$05
 	sta VIC_SPRITE_EXTRA_COLOR1
@@ -114,11 +107,12 @@ sprite_location_loop:
 	lda sprite_locations,x
 	beq init_sprites_done
 	sta VIC_SPRITE_X_POS,x
-	sta VIC_SPRITE_Y_POS,x
+	inx
+	lda sprite_locations,x
+	sta VIC_SPRITE_X_POS,x
 	inx
 	jmp sprite_location_loop
 init_sprites_done:
-	lda #$80
 	sta $d010
 	rts
 
@@ -241,6 +235,6 @@ animation_frame:
 	!byte balloon / 64
 
 sprite_locations:
-	!byte $dc,$64,$85,$9a,$65,$69,$7c,$34
-	!byte $b6,$2c,$db,$59,$c8,$91,$23,$97
+	!byte $f5,$8c,$dd,$c4,$a5,$dc,$6c,$c4
+	!byte $55,$8c,$6c,$53,$a4,$3c,$dd,$53
 	!byte $00		; terminator
