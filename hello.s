@@ -155,7 +155,7 @@ sprite_rotation_done:
 animate_sprite:
 	inc animation_counter
 	lda animation_counter
-	cmp #48
+	cmp #32
 	bne animation_done
 	lda #0
 	sta animation_counter
