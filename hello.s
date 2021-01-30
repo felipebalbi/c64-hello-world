@@ -13,6 +13,9 @@
 	IRQ_LOW			= $0314
 	IRQ_HIGH		= $0315
 
+	init_sid		= $1000
+	play_sid		= $1003
+
 	!macro loader .lineno, .loadaddr {
 		!word * + 11	    ; Next basic line
 		!word .lineno	    ; Line number
@@ -32,7 +35,8 @@ main:
 
 	jsr init_screen		; Initialize the screen
 	jsr init_text		; Write our text to the screen
-	
+	jsr init_sid		; Initialize SID routine
+
         ldy #$7f		; $7f = %01111111
         sty CIA1_INTR_REG	; clear all CIA1 interrupts
         sty CIA2_INTR_REG	; clear all CIA2 interrupts
@@ -100,6 +104,7 @@ color_loop:
 irq:
 	dec $d019		; Clear the Interrupt Status
 	jsr color_wash		; Call our color wash subroutine
+	jsr play_sid		; Play sid tune
 	jmp $ea81		; Jump to system IRQ handler
 
 message:	
@@ -114,3 +119,6 @@ color:
         !byte $01,$01,$01,$01,$01
         !byte $01,$01,$01,$01,$01
         !byte $01,$01,$01,$01,$01
+
+	* = $1000
+	!bin "assets/future_cowboy.sid",,$7c+2
