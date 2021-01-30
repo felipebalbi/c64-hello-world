@@ -13,20 +13,18 @@
 	IRQ_LOW			= $0314
 	IRQ_HIGH		= $0315
 
+	!macro loader .lineno, .loadaddr {
+		!word * + 11	    ; Next basic line
+		!word .lineno	    ; Line number
+		!byte $9e	    ; SYS
+		!text .loadaddr	    ; load address
+		!byte $00, $00, $00 ; Terminator
+	}
+
 	;; Start of basic loader
 	*= $0801
 
-	!byte $0d,$08		; Address of next line
-
-	!byte $dc,$07		; Line number: 0x07dc = 2012
-
-	!byte $9e		; opcode for SYS instruction
-	!byte $20		; PETSCII space
-
-	!byte $34,$39,$31,$35	; 49152 = 0xc000
-	!byte $32		;
-
-	!byte $00,$00,$00	; BASIC block terminator
+	+loader 2021, "49152"
 
 	* = $c000
 main:	
