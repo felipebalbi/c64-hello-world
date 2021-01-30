@@ -83,11 +83,6 @@ text_loop:
 	bne text_loop		; If not, we're not done
 	rts			; Return from subroutine
 
-irq:
-	dec $d019		; Clear the Interrupt Status
-	jsr color_wash		; Call our color wash subroutine
-	jmp $ea81		; Jump to system IRQ handler
-
 color_wash:	
 	ldx #$00		; Load X with 0
 	lda color,x		; Put first color in X
@@ -102,6 +97,11 @@ color_loop:
 	pla			; Pull stored copy of first color from Stack
 	sta color,x		; Overwrite last color
 	rts
+
+irq:
+	dec $d019		; Clear the Interrupt Status
+	jsr color_wash		; Call our color wash subroutine
+	jmp $ea81		; Jump to system IRQ handler
 
 message:	
 	!scr "              hello world!              "
