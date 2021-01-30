@@ -120,5 +120,8 @@ color:
         !byte $01,$01,$01,$01,$01
         !byte $01,$01,$01,$01,$01
 
+	;; Load SID file to load address listed in File Header. The header ends
+	;; at $7c and starts with a two-byte load address, hence the skip of
+	;; $7c+2
 	* = $1000
 	!bin "assets/future_cowboy.sid",,$7c+2
