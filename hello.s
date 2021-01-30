@@ -85,7 +85,7 @@ text_loop:
 color_wash:	
 	ldx #$00		; Load X with 0
 	lda color,x		; Put first color in X
-	pha			; Push a copy to the stack
+	tay			; Transfer A to Y
 color_loop:
 	sta $d9e0,x		; Store to center line of color ram
 	lda color+1,x		; Get next color
@@ -93,7 +93,7 @@ color_loop:
 	inx			; Increment X index
 	cpx #40			; X == 40?
 	bne color_loop		; If not, we're not done
-	pla			; Pull stored copy of first color from Stack
+	tya			; Pull stored copy of first color from Y
 	sta color,x		; Overwrite last color
 	rts
 
