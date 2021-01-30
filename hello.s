@@ -2,16 +2,16 @@
 	!to "hello.prg",cbm
 
 	;; Helper labels
-	SCREEN_RAM = $0400
-	VIC_SCREEN_CTRL_REG = $d011
-	VIC_RASTER_LINE = $d012
-	VIC_INTR_REG = $d01a
-	VIC_BORDER_COLOR = $d020
-	VIC_SCREEN_COLOR = $d021
-	CIA1_INTR_REG = $dc0d
-	CIA2_INTR_REG = $dd0d
-	IRQ_LOW = $0314
-	IRQ_HIGH = $0315
+	SCREEN_RAM		= $0400
+	VIC_SCREEN_CTRL_REG	= $d011
+	VIC_RASTER_LINE		= $d012
+	VIC_INTR_REG		= $d01a
+	VIC_BORDER_COLOR	= $d020
+	VIC_SCREEN_COLOR	= $d021
+	CIA1_INTR_REG		= $dc0d
+	CIA2_INTR_REG		= $dd0d
+	IRQ_LOW			= $0314
+	IRQ_HIGH		= $0315
 
 	;; Start of basic loader
 	*= $0801
