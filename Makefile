@@ -19,7 +19,7 @@ RM		:= $(shell which rm)
 C1541		:= $(shell which c1541)
 
 # Flags
-ASFLAGS		:= -l $(SYM)
+ASFLAGS		:= --color -l $(SYM)
 C1541_FLAGS	:= -format $(DISK),1 d64 $(D64) 8 -attach $(D64)	\
                    $(foreach p,$(PRG),-write $(p) $(subst .prg,,$(p)))
 
