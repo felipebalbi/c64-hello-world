@@ -74,12 +74,11 @@ screen_loop:
 	rts			; Return from subroutine
 
 init_text:
-	ldx #$00		; load X index with 0
+	ldx #39		; load X index with 0
 text_loop:
 	lda message,x		; load A with message[x]
 	sta $05e0,x		; Store to middle line of screen
-	inx			; increment X
-	cpx #40			; X == 40?
+	dex			; increment X
 	bne text_loop		; If not, we're not done
 	rts			; Return from subroutine
 
