@@ -74,7 +74,7 @@ screen_loop:
 	rts			; Return from subroutine
 
 init_text:
-	ldx #39		; load X index with 0
+	ldx #39			; load X index with 0
 text_loop:
 	lda message,x		; load A with message[x]
 	sta $05e0,x		; Store to middle line of screen
