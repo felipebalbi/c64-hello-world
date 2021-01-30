@@ -111,14 +111,14 @@ message:
 	!scr "              hello world!              "
 
 color:
-        !byte $09,$09,$09,$09,$01
-        !byte $01,$01,$01,$01,$01
-        !byte $01,$01,$01,$01,$01
-        !byte $01,$01,$01,$01,$01
-        !byte $01,$01,$01,$01,$01
-        !byte $01,$01,$01,$01,$01
-        !byte $01,$01,$01,$01,$01
-        !byte $01,$01,$01,$01,$01
+        !byte $09, $09, $09, $09, $01
+        !byte $01, $01, $01, $01, $01
+        !byte $01, $01, $01, $01, $01
+        !byte $01, $01, $01, $01, $01
+        !byte $01, $01, $01, $01, $01
+        !byte $01, $01, $01, $01, $01
+        !byte $01, $01, $01, $01, $01
+        !byte $01, $01, $01, $01, $01
 
 	;; Load SID file to load address listed in File Header. The header ends
 	;; at $7c and starts with a two-byte load address, hence the skip of
