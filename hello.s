@@ -144,7 +144,7 @@ loop:
 	sta VIC_SPRITE_Y_POSITION
 	rts
 
-	!zone joy_handler {
+	!zone {
 joy_handler:
 	lda #$01		; mask joystick up movement
 	bit CIA1_DATA_PORT_A	; bitwise AND
@@ -234,7 +234,7 @@ joy_left:
 	dec VIC_SPRITE_X_POSITION
 	rts
 
-	!zone joy_right {
+	!zone {
 joy_right:
 	lda VIC_SPRITE_X_POSITION
 	clc
