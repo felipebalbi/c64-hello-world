@@ -40,7 +40,7 @@
 	}
 
 	!macro spriteline .v {
-		!by .v >> 16, (.v >> 8) & $ff, .v & $ff
+		!byte .v >> 16, (.v >> 8) & $ff, .v & $ff
 	}
 
 	;; Start of basic loader
