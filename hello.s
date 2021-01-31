@@ -2,14 +2,29 @@
 	!to "hello.prg",cbm
 
 	;; Helper labels
+	CASSETTE_BUFFER		= $0340
 	SCREEN_RAM		= $0400
-	VIC_SCREEN_CTRL_REG	= $d011
-	VIC_RASTER_LINE		= $d012
-	VIC_INTR_REG		= $d01a
-	VIC_BORDER_COLOR	= $d020
-	VIC_SCREEN_COLOR	= $d021
-	CIA1_INTR_REG		= $dc0d
-	CIA2_INTR_REG		= $dd0d
+
+	VIC_BASE		= $d000
+	VIC_SPRITE_X_POSITION	= VIC_BASE + $00
+	VIC_SPRITE_Y_POSITION	= VIC_BASE + $01
+	VIC_SPRITE_X_MSB	= VIC_BASE + $10
+	VIC_SCREEN_CTRL_REG	= VIC_BASE + $11
+	VIC_RASTER_LINE		= VIC_BASE + $12
+	VIC_SPRITE_ENABLE	= VIC_BASE + $15
+	VIC_INTR_STATUS_REG	= VIC_BASE + $19
+	VIC_INTR_MASK_REG	= VIC_BASE + $1a
+	VIC_BORDER_COLOR	= VIC_BASE + $20
+	VIC_SCREEN_COLOR	= VIC_BASE + $21
+	VIC_SPRITE_COLOR	= VIC_BASE + $27
+
+	CIA1_BASE		= $dc00
+	CIA1_DATA_PORT_A	= CIA1_BASE + $00
+	CIA1_INTR_REG		= CIA1_BASE + $0d
+
+	CIA2_BASE		= $dd00
+	CIA2_INTR_REG		= CIA2_BASE + $0d
+
 	IRQ_LOW			= $0314
 	IRQ_HIGH		= $0315
 
@@ -24,6 +39,10 @@
 		!byte $00, $00, $00 ; Terminator
 	}
 
+	!macro spriteline .v {
+		!by .v >> 16, (.v >> 8) & $ff, .v & $ff
+	}
+
 	;; Start of basic loader
 	*= $0801
 
@@ -36,6 +55,7 @@ main:
 	jsr init_screen		; Initialize the screen
 	jsr init_text		; Write our text to the screen
 	jsr init_sid		; Initialize SID routine
+	jsr init_sprite		; Initialize a sprite
 
         ldy #$7f		; $7f = %01111111
         sty CIA1_INTR_REG	; clear all CIA1 interrupts
@@ -44,7 +64,7 @@ main:
         lda CIA2_INTR_REG	; flush posted writes
 
         lda #$01		; Enable Bit 0
-        sta VIC_INTR_REG	; Bit0 = Rasterbeam interrupt
+        sta VIC_INTR_MASK_REG	; Bit0 = Rasterbeam interrupt
 
         lda VIC_SCREEN_CTRL_REG	; Read VIC Screen Control Register
         and #$7f		; Clear BIT7
@@ -101,10 +121,68 @@ color_loop:
 	sta color,x		; Overwrite last color
 	rts
 
+init_sprite:
+	;; Copy Sprite to Casette buffer
+	ldx #$7f
+loop:
+	lda sprite,x
+	sta CASSETTE_BUFFER,x
+	dex
+	bpl loop
+
+	ldx #$0d
+	stx $07f8
+
+	lda $01
+	sta VIC_SPRITE_ENABLE	; Enable Sprite #0
+
+	ldx #$01
+	stx VIC_SPRITE_COLOR + 0
+
+	lda #$3c		; Sprite Position
+	sta VIC_SPRITE_X_POSITION
+	sta VIC_SPRITE_Y_POSITION
+	rts
+
+	!zone joy_handler {
+joy_handler:
+	lda #$01		; mask joystick up movement
+	bit CIA1_DATA_PORT_A	; bitwise AND
+	bne .down		; not going up, try down
+	jsr joy_up
+
+.down:
+	lda #$02		; mask joystick down movement
+	bit CIA1_DATA_PORT_A	; bitwise AND
+	bne .left		; not going down, try left
+	jsr joy_down
+
+.left:
+	lda #$04		; mask joystick left movement
+	bit CIA1_DATA_PORT_A	; bitwise AND
+	bne .right		; not going left, try right
+	jsr joy_left
+
+.right:
+	lda #$08		; mask joystick right movement
+	bit CIA1_DATA_PORT_A	; bitwise AND
+	bne .fire		; not going right, try fire
+	jsr joy_right
+
+.fire:
+	lda #$10		; mask joystick button push 
+	bit CIA1_DATA_PORT_A	; bitwise AND
+	bne .done		; not firing, done
+	inc VIC_BORDER_COLOR
+.done:
+        rts
+	}
+
 irq:
-	dec $d019		; Clear the Interrupt Status
+	dec VIC_INTR_STATUS_REG	; Clear the Interrupt Status
 	jsr color_wash		; Call our color wash subroutine
 	jsr play_sid		; Play sid tune
+	jsr joy_handler		; Update sprite position
 	jmp $ea81		; Jump to system IRQ handler
 
 message:	
@@ -120,8 +198,59 @@ color:
         !byte $01, $01, $01, $01, $01
         !byte $01, $01, $01, $01, $01
 
+sprite:
+	+spriteline %........................
+	+spriteline %.#......................
+	+spriteline %.##.....................
+	+spriteline %.###....................
+	+spriteline %.####...................
+	+spriteline %.#####..................
+	+spriteline %.######.................
+	+spriteline %.#######................
+	+spriteline %.########...............
+	+spriteline %.#########..............
+	+spriteline %.########...............
+	+spriteline %.######.................
+	+spriteline %.######.................
+	+spriteline %.##..##.................
+	+spriteline %.#....##................
+	+spriteline %......##................
+	+spriteline %.......##...............
+	+spriteline %.......##...............
+	+spriteline %........##..............
+	+spriteline %........##..............
+	+spriteline %........................
+	!byte $00			; Pad to 64-byte block
+
+joy_up:
+	dec VIC_SPRITE_Y_POSITION
+	rts
+
+joy_down:
+	inc VIC_SPRITE_Y_POSITION
+	rts
+
+joy_left:
+	dec VIC_SPRITE_X_POSITION
+	rts
+
+	!zone joy_right {
+joy_right:
+	lda VIC_SPRITE_X_POSITION
+	clc
+	adc #$01
+	sta VIC_SPRITE_X_POSITION
+	bcc .done
+	lda VIC_SPRITE_X_MSB
+	eor #$01
+	sta VIC_SPRITE_X_MSB
+.done:
+	rts
+	}
+
 	;; Load SID file to load address listed in File Header. The header ends
 	;; at $7c and starts with a two-byte load address, hence the skip of
 	;; $7c+2
 	* = $1000
 	!bin "assets/future_cowboy.sid",,$7c+2
+
