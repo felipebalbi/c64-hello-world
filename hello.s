@@ -136,46 +136,44 @@ loop:
 	lda $01
 	sta VIC_SPRITE_ENABLE	; Enable Sprite #0
 
-	ldx #$01
+	ldx #$02
 	stx VIC_SPRITE_COLOR + 0
 
-	lda #$3c		; Sprite Position
+	lda #$64		; Sprite Position
 	sta VIC_SPRITE_X_POSITION
 	sta VIC_SPRITE_Y_POSITION
 	rts
 
 	!zone {
 joy_handler:
-	lda #$01		; mask joystick up movement
-	bit CIA1_DATA_PORT_A	; bitwise AND
-	bne .down		; not going up, try down
-	jsr joy_up
-
+	lda CIA1_DATA_PORT_A
+	ldx VIC_SPRITE_X_POSITION
+	ldy VIC_SPRITE_Y_POSITION
+	lsr
+	bcs .down
+	dey
 .down:
-	lda #$02		; mask joystick down movement
-	bit CIA1_DATA_PORT_A	; bitwise AND
-	bne .left		; not going down, try left
-	jsr joy_down
-
+	lsr
+	bcs .left
+	iny
 .left:
-	lda #$04		; mask joystick left movement
-	bit CIA1_DATA_PORT_A	; bitwise AND
-	bne .right		; not going left, try right
-	jsr joy_left
-
+	lsr
+	bcs .right
+	dex
 .right:
-	lda #$08		; mask joystick right movement
-	bit CIA1_DATA_PORT_A	; bitwise AND
-	bne .fire		; not going right, try fire
-	jsr joy_right
-
+	lsr
+	bcs .fire
+	inx
 .fire:
-	lda #$10		; mask joystick button push 
-	bit CIA1_DATA_PORT_A	; bitwise AND
-	bne .done		; not firing, done
+	lsr
+	bcs .update_xy
 	inc VIC_BORDER_COLOR
-.done:
-        rts
+
+.update_xy:
+	stx VIC_SPRITE_X_POSITION
+	sty VIC_SPRITE_Y_POSITION
+
+	rts
 	}
 
 irq:
@@ -221,18 +219,6 @@ sprite:
 	+spriteline %........##..............
 	+spriteline %........................
 	!byte $00			; Pad to 64-byte block
-
-joy_up:
-	dec VIC_SPRITE_Y_POSITION
-	rts
-
-joy_down:
-	inc VIC_SPRITE_Y_POSITION
-	rts
-
-joy_left:
-	dec VIC_SPRITE_X_POSITION
-	rts
 
 	!zone {
 joy_right:
