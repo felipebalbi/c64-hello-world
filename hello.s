@@ -1,6 +1,3 @@
-	!cpu 6502
-	!to "hello.prg",cbm
-
 	;; Helper labels
 	CASSETTE_BUFFER		= $0340
 	SCREEN_RAM		= $0400
@@ -31,30 +28,18 @@
 	init_sid		= $1000
 	play_sid		= $1003
 
-	!macro loader .lineno, .loadaddr {
-		!word * + 11	    ; Next basic line
-		!word .lineno	    ; Line number
-		!byte $9e	    ; SYS
-		!text .loadaddr	    ; load address
-		!byte $00, $00, $00 ; Terminator
-	}
+	.macro spriteline v
+		.byte v >> 16, (v >> 8) & $ff, v & $ff
+	.endmacro
 
-	!macro spriteline .v {
-		!byte .v >> 16, (.v >> 8) & $ff, .v & $ff
-	}
+	.macpack cbm
 
-	;; Start of basic loader
-	*= $0801
-
-	+loader 2021, "49152"
-
-	* = $c000
 main:	
 	sei			; Disable interrupts
 
 	jsr init_screen		; Initialize the screen
 	jsr init_text		; Write our text to the screen
-	jsr init_sid		; Initialize SID routine
+	;; jsr init_sid		; Initialize SID routine
 	jsr init_sprite		; Initialize a sprite
 
         ldy #$7f		; $7f = %01111111
@@ -144,99 +129,95 @@ loop:
 	sta VIC_SPRITE_Y_POSITION
 	rts
 
-	!zone {
 joy_handler:
 	lda CIA1_DATA_PORT_A
 	ldx VIC_SPRITE_X_POSITION
 	ldy VIC_SPRITE_Y_POSITION
 	lsr
-	bcs .down
+	bcs @down
 	dey
-.down:
+@down:
 	lsr
-	bcs .left
+	bcs @left
 	iny
-.left:
+@left:
 	lsr
-	bcs .right
+	bcs @right
 	dex
-.right:
+@right:
 	lsr
-	bcs .fire
+	bcs @fire
 	inx
-.fire:
+@fire:
 	lsr
-	bcs .update_xy
+	bcs @update_xy
 	inc VIC_BORDER_COLOR
 
-.update_xy:
+@update_xy:
 	stx VIC_SPRITE_X_POSITION
 	sty VIC_SPRITE_Y_POSITION
 
 	rts
-	}
 
 irq:
 	dec VIC_INTR_STATUS_REG	; Clear the Interrupt Status
 	jsr color_wash		; Call our color wash subroutine
-	jsr play_sid		; Play sid tune
+	;; jsr play_sid		; Play sid tune
 	jsr joy_handler		; Update sprite position
 	jmp $ea81		; Jump to system IRQ handler
 
 message:	
-	!scr "              hello world!              "
+	scrcode "              hello world!              "
 
 color:
-        !byte $09, $09, $09, $09, $01
-        !byte $01, $01, $01, $01, $01
-        !byte $01, $01, $01, $01, $01
-        !byte $01, $01, $01, $01, $01
-        !byte $01, $01, $01, $01, $01
-        !byte $01, $01, $01, $01, $01
-        !byte $01, $01, $01, $01, $01
-        !byte $01, $01, $01, $01, $01
+        .byte $09, $09, $09, $09, $01
+        .byte $01, $01, $01, $01, $01
+        .byte $01, $01, $01, $01, $01
+        .byte $01, $01, $01, $01, $01
+        .byte $01, $01, $01, $01, $01
+        .byte $01, $01, $01, $01, $01
+        .byte $01, $01, $01, $01, $01
+        .byte $01, $01, $01, $01, $01
 
 sprite:
-	+spriteline %........................
-	+spriteline %.#......................
-	+spriteline %.##.....................
-	+spriteline %.###....................
-	+spriteline %.####...................
-	+spriteline %.#####..................
-	+spriteline %.######.................
-	+spriteline %.#######................
-	+spriteline %.########...............
-	+spriteline %.#########..............
-	+spriteline %.########...............
-	+spriteline %.######.................
-	+spriteline %.######.................
-	+spriteline %.##..##.................
-	+spriteline %.#....##................
-	+spriteline %......##................
-	+spriteline %.......##...............
-	+spriteline %.......##...............
-	+spriteline %........##..............
-	+spriteline %........##..............
-	+spriteline %........................
-	!byte $00			; Pad to 64-byte block
+	spriteline %000000000000000000000000
+	spriteline %010000000000000000000000
+	spriteline %011000000000000000000000
+	spriteline %011100000000000000000000
+	spriteline %011110000000000000000000
+	spriteline %011111000000000000000000
+	spriteline %011111100000000000000000
+	spriteline %011111110000000000000000
+	spriteline %011111111000000000000000
+	spriteline %011111111100000000000000
+	spriteline %011111111000000000000000
+	spriteline %011111100000000000000000
+	spriteline %011111100000000000000000
+	spriteline %011001100000000000000000
+	spriteline %010000110000000000000000
+	spriteline %000000110000000000000000
+	spriteline %000000011000000000000000
+	spriteline %000000011000000000000000
+	spriteline %000000001100000000000000
+	spriteline %000000001100000000000000
+	spriteline %000000000000000000000000
+	.byte $00			; Pad to 64-byte block
 
-	!zone {
 joy_right:
 	lda VIC_SPRITE_X_POSITION
 	clc
 	adc #$01
 	sta VIC_SPRITE_X_POSITION
-	bcc .done
+	bcc @done
 	lda VIC_SPRITE_X_MSB
 	eor #$01
 	sta VIC_SPRITE_X_MSB
-.done:
+@done:
 	rts
-	}
 
-	;; Load SID file to load address listed in File Header. The header ends
-	;; at $7c and starts with a two-byte load address, hence the skip of
-	;; $7c+2
-	* = $1000
-	!bin "assets/future_cowboy.sid",,$7c+2
+	;; ;; Load SID file to load address listed in File Header. The header ends
+	;; ;; at $7c and starts with a two-byte load address, hence the skip of
+	;; ;; $7c+2
+	;; * = $1000
+	;; !bin "assets/future_cowboy.sid",,$7c+2
 
