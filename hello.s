@@ -243,4 +243,3 @@ joy_right:
 	;; $7c+2
 	* = $1000
 	!bin "assets/future_cowboy.sid",,$7c+2
-
