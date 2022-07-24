@@ -31,22 +31,50 @@
 	init_sid		= $1000
 	play_sid		= $1003
 
-	!macro basic_loader .lineno, .loadaddr {
-		!word @end	    ; Next basic line
-		!word .lineno	    ; Line number
-		!byte $9e	    ; SYS
-		!byte '0' + (.loadaddr % 100000 / 10000)
-		!byte '0' + (.loadaddr % 10000 / 1000)
-		!byte '0' + (.loadaddr % 1000 / 100)
-		!byte '0' + (.loadaddr % 100 / 10)
-		!byte '0' + (.loadaddr % 10)
-		!byte $00, $00, $00 ; Terminator
+!macro basic_loader .lineno, .loadaddr {
+	!word @end	    ; Next basic line
+	!word .lineno	    ; Line number
+	!byte $9e	    ; SYS
+	!byte '0' + (.loadaddr % 100000 / 10000)
+	!byte '0' + (.loadaddr % 10000 / 1000)
+	!byte '0' + (.loadaddr % 1000 / 100)
+	!byte '0' + (.loadaddr % 100 / 10)
+	!byte '0' + (.loadaddr % 10)
+	!byte $00, $00, $00 ; Terminator
 @end:
-	}
+}
 
-	!macro spriteline .v {
-		!byte .v >> 16, (.v >> 8) & $ff, .v & $ff
-	}
+!macro spriteline .v {
+	!byte .v >> 16, (.v >> 8) & $ff, .v & $ff
+}
+
+!macro min16 a1, a2, b1, b2 {
+	lda a1
+	cmp #b1
+	bmi @done
+	lda #b1
+	sta a1
+
+	lda a2
+	cmp #b2
+	bmi @done
+	lda #b2
+	sta a2
+@done:
+}
+
+!macro max16 a1, a2, b1, b2 {
+	lda #b1
+	cmp a1
+	bcc @done
+	sta a1
+
+	lda #b2
+	cmp a2
+	bcc @done
+	sta a2
+@done:
+}
 
 	;; Start of basic loader
 	*= $0801
@@ -193,32 +221,8 @@ joy_handler:
 	inc VIC_BORDER_COLOR
 
 .update_xy:
-.min:
-	;; Clamp High byte
-	lda xposhi
-	cmp #xposhimax
-	bmi .max
-	lda #xposhimax
-	sta xposhi
-
-	;; Clamp Low byte
-	lda #xposlomax
-	cmp xposlo
-	bcs .max
-	sta xposlo
-
-.max:
-	;; Clamp high byte
-	lda #xposhimin
-	cmp xposhi
-	bcc .done
-	sta xposhi
-
-	;; Clamp low byte
-	lda #xposlomin
-	cmp xposlo
-	bcc .done
-	sta xposlo
+	+min16 xposhi, xposlo, xposhimax, xposlomax
+	+max16 xposhi, xposlo, xposhimin, xposlomin
 
 .done:
 	sty VIC_SPRITE_Y_POSITION
@@ -295,14 +299,17 @@ joy_right:
 	* = $1000
 	!bin "assets/future_cowboy.sid",,$7c+2
 
-
 fire_button:	!byte $00
 xposlo:		!byte xposlomin
 xposhi:		!byte $00
 debounce:	!byte $00
 
-xposlomin	= 24
-xposlomax	= 64
+xposlomin	= $18
+xposlomax	= $4d		; visible screen X max is 320 ($0140), but our
+				; sprite doesn't use all bits in the sprite
+				; definition, therefore we let the sprite go
+				; slightly behind the border so its right edge
+				; touches the right border.
 
-xposhimin	= 0
-xposhimax	= 1
+xposhimin	= $00
+xposhimax	= $01
