@@ -48,6 +48,22 @@
 	!byte .v >> 16, (.v >> 8) & $ff, .v & $ff
 }
 
+!macro min8 a, b {
+	lda #b
+	cmp a
+	bcs @done
+	sta a
+@done:
+}
+
+!macro max8 a, b {
+	lda #b
+	cmp a
+	bcc @done
+	sta a
+@done:
+}
+
 !macro min16 a1, a2, b1, b2 {
 	lda a1
 	cmp #b1
@@ -171,29 +187,28 @@ loop:
 	ldx #$02
 	stx VIC_SPRITE_COLOR + 0
 
-	lda #$64		; Sprite Position
+	lda xposlo
 	sta VIC_SPRITE_X_POSITION
+	lda xposhi
+	sta VIC_SPRITE_X_MSB
+	lda ypos
 	sta VIC_SPRITE_Y_POSITION
-	sta xposlo
-
-	lda #$00
-	sta xposhi
 
 	rts
 
 	!zone {
 joy_handler:
 	lda CIA1_DATA_PORT_A
-	ldx VIC_SPRITE_X_POSITION
-	ldy VIC_SPRITE_Y_POSITION
+
+.up:
 	lsr
 	bcs .down
-	dey
+	dec ypos
 
 .down:
 	lsr
 	bcs .left
-	iny
+	inc ypos
 
 .left:
 	lsr
@@ -224,8 +239,12 @@ joy_handler:
 	+min16 xposhi, xposlo, xposhimax, xposlomax
 	+max16 xposhi, xposlo, xposhimin, xposlomin
 
+	+min8 ypos, yposmax
+	+max8 ypos, yposmin
+
 .done:
-	sty VIC_SPRITE_Y_POSITION
+	lda ypos
+	sta VIC_SPRITE_Y_POSITION
 
 	lda xposlo
 	sta VIC_SPRITE_X_POSITION
@@ -279,20 +298,6 @@ sprite:
 	+spriteline %........................
 	!byte $00			; Pad to 64-byte block
 
-	!zone {
-joy_right:
-	lda VIC_SPRITE_X_POSITION
-	clc
-	adc #$01
-	sta VIC_SPRITE_X_POSITION
-	bcc .done
-	lda VIC_SPRITE_X_MSB
-	eor #$01
-	sta VIC_SPRITE_X_MSB
-.done:
-	rts
-	}
-
 	;; Load SID file to load address listed in File Header. The header ends
 	;; at $7c and starts with a two-byte load address, hence the skip of
 	;; $7c+2
@@ -301,8 +306,8 @@ joy_right:
 
 fire_button:	!byte $00
 xposlo:		!byte xposlomin
-xposhi:		!byte $00
-debounce:	!byte $00
+xposhi:		!byte xposhimin
+ypos:		!byte yposmin
 
 xposlomin	= $18
 xposlomax	= $4d		; visible screen X max is 320 ($0140), but our
@@ -313,3 +318,6 @@ xposlomax	= $4d		; visible screen X max is 320 ($0140), but our
 
 xposhimin	= $00
 xposhimax	= $01
+
+yposmin		= $32
+yposmax		= $e5
