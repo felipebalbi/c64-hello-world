@@ -146,6 +146,11 @@ loop:
 	lda #$64		; Sprite Position
 	sta VIC_SPRITE_X_POSITION
 	sta VIC_SPRITE_Y_POSITION
+	sta xposlo
+
+	lda #$00
+	sta xposhi
+
 	rts
 
 	!zone {
@@ -156,25 +161,42 @@ joy_handler:
 	lsr
 	bcs .down
 	dey
+
 .down:
 	lsr
 	bcs .left
 	iny
+
 .left:
 	lsr
 	bcs .right
-	dex
+	dec xposlo
+	ldx xposlo
+	cpx #$ff
+	bne .right
+	dec xposhi
+
 .right:
 	lsr
 	bcs .fire
-	inx
+	inc xposlo
+	bne .fire
+	inc xposhi
+
 .fire:
 	lsr
-	bcs .update_xy
+	ror fire_button
+	bit fire_button
+        bmi .update_xy
+        bvc .update_xy
+
 	inc VIC_BORDER_COLOR
 
 .update_xy:
-	stx VIC_SPRITE_X_POSITION
+	lda xposlo
+	sta VIC_SPRITE_X_POSITION
+	lda xposhi
+	sta VIC_SPRITE_X_MSB
 	sty VIC_SPRITE_Y_POSITION
 
 	rts
@@ -243,3 +265,9 @@ joy_right:
 	;; $7c+2
 	* = $1000
 	!bin "assets/future_cowboy.sid",,$7c+2
+
+
+fire_button:	!byte $00
+xposlo:		!byte $64
+xposhi:		!byte $00
+debounce:	!byte $00
