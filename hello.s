@@ -193,11 +193,40 @@ joy_handler:
 	inc VIC_BORDER_COLOR
 
 .update_xy:
+.min:
+	;; Clamp High byte
+	lda xposhi
+	cmp #xposhimax
+	bmi .max
+	lda #xposhimax
+	sta xposhi
+
+	;; Clamp Low byte
+	lda #xposlomax
+	cmp xposlo
+	bcs .max
+	sta xposlo
+
+.max:
+	;; Clamp high byte
+	lda #xposhimin
+	cmp xposhi
+	bcc .done
+	sta xposhi
+
+	;; Clamp low byte
+	lda #xposlomin
+	cmp xposlo
+	bcc .done
+	sta xposlo
+
+.done:
+	sty VIC_SPRITE_Y_POSITION
+
 	lda xposlo
 	sta VIC_SPRITE_X_POSITION
 	lda xposhi
 	sta VIC_SPRITE_X_MSB
-	sty VIC_SPRITE_Y_POSITION
 
 	rts
 	}
@@ -268,6 +297,12 @@ joy_right:
 
 
 fire_button:	!byte $00
-xposlo:		!byte $64
+xposlo:		!byte xposlomin
 xposhi:		!byte $00
 debounce:	!byte $00
+
+xposlomin	= 24
+xposlomax	= 64
+
+xposhimin	= 0
+xposhimax	= 1
