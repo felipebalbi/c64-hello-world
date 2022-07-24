@@ -31,12 +31,17 @@
 	init_sid		= $1000
 	play_sid		= $1003
 
-	!macro loader .lineno, .loadaddr {
-		!word * + 11	    ; Next basic line
+	!macro basic_loader .lineno, .loadaddr {
+		!word @end	    ; Next basic line
 		!word .lineno	    ; Line number
 		!byte $9e	    ; SYS
-		!text .loadaddr	    ; load address
+		!byte '0' + (.loadaddr % 100000 / 10000)
+		!byte '0' + (.loadaddr % 10000 / 1000)
+		!byte '0' + (.loadaddr % 1000 / 100)
+		!byte '0' + (.loadaddr % 100 / 10)
+		!byte '0' + (.loadaddr % 10)
 		!byte $00, $00, $00 ; Terminator
+@end:
 	}
 
 	!macro spriteline .v {
@@ -46,9 +51,8 @@
 	;; Start of basic loader
 	*= $0801
 
-	+loader 2021, "49152"
+	+basic_loader 2021, main
 
-	* = $c000
 main:	
 	sei			; Disable interrupts
 
